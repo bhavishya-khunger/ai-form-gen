@@ -1,22 +1,28 @@
-import React, { useState } from "react";
+import { Upload } from "lucide-react";
+import React, { useState, useEffect } from "react";
 import Markdown from "react-markdown";
 
 const themeColors = {
   purple: {
     bg: "bg-purple-100",
-    border: "border-purple-600",
+    border: "border-purple-700",
     button: "bg-purple-600 hover:bg-purple-700",
   },
   blue: {
     bg: "bg-blue-100",
-    border: "border-blue-600",
+    border: "border-blue-700",
     button: "bg-blue-600 hover:bg-blue-700",
   },
   green: {
     bg: "bg-green-100",
-    border: "border-green-600",
+    border: "border-green-700",
     button: "bg-green-600 hover:bg-green-700",
   },
+  red: {
+    bg: "bg-red-100",
+    border: "border-red-700",
+    button: "bg-red-600 hover:bg-red-700"
+  }
 };
 
 const FormPreview = ({ formData, fields }) => {
@@ -24,9 +30,28 @@ const FormPreview = ({ formData, fields }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [otherInputs, setOtherInputs] = useState({});
   const [selectedTheme, setSelectedTheme] = useState("purple");
+  const [fileNames, setFileNames] = useState({});
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [submissions, setSubmissions] = useState([]);
+
+  useEffect(() => {
+    const submittedForms = JSON.parse(localStorage.getItem("submittedForms") || "{}");
+    if (formData?.id && submittedForms[formData.id]) {
+      setHasSubmitted(true);
+    }
+  }, [formData?.id]);
 
   const handleChange = (e, field, option = null) => {
     let value;
+    const file = e?.target?.files?.[0];
+
+    if (file) {
+      setFileNames((prev) => ({
+        ...prev,
+        [field.id]: file.name,
+      }));
+    }
+
     if (field.type === "mcq" || field.type === "dropdown") {
       value = option;
     } else if (field.type === "checkbox") {
@@ -37,7 +62,7 @@ const FormPreview = ({ formData, fields }) => {
     } else if (field.type === "slider") {
       value = Number(e.target.value);
     } else if (field.type === "file") {
-      value = e.target.files[0];
+      value = file;
     } else {
       value = e.target.value;
     }
@@ -53,14 +78,56 @@ const FormPreview = ({ formData, fields }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsSubmitting(true);
+
     setTimeout(() => {
-      console.log("Submitted:", formValues);
-      alert("Response Submitted!");
+      const newSubmission = { [formData.id]: formValues };
+      const updatedSubmissions = [...submissions, newSubmission];
+
+      setSubmissions(updatedSubmissions);
+      localStorage.setItem("responses", JSON.stringify(updatedSubmissions));
+
+      // Save flag to prevent resubmission
+      const submittedForms = JSON.parse(localStorage.getItem("submittedForms") || "{}");
+      submittedForms[formData.id] = true;
+      localStorage.setItem("submittedForms", JSON.stringify(submittedForms));
+
+      setHasSubmitted(true);
+      // alert("Response Submitted!");
       setIsSubmitting(false);
     }, 800);
   };
 
   const currentTheme = themeColors[selectedTheme];
+
+  if (hasSubmitted) {
+    return (
+      <div className={`min-h-screen ${currentTheme.bg} py-10 px-4 font-sans text-gray-900`}>
+        <div className="max-w-3xl mx-auto">
+          {/* Theme Selection */}
+          <div className="mb-6 flex gap-3 items-center">
+            <label className="font-medium">Choose Theme:</label>
+            {Object.keys(themeColors).map((theme) => (
+              <button
+                key={theme}
+                className={`h-6 w-6 rounded-full ${themeColors[theme].border} border-2 ${selectedTheme === theme ? "ring-2 ring-black" : ""}`}
+                onClick={() => setSelectedTheme(theme)}
+              />
+            ))}
+          </div>
+
+          {/* Header */}
+          <div className="mb-4 rounded-md shadow overflow-hidden">
+            <div className={`bg-white border-t-10 ${currentTheme.border} p-6`}>
+              <h1 className="text-3xl font-semibold mb-2">{formData.title || "Untitled Form"}</h1>
+              <div className="text-gray-600 text-sm mt-4">
+                <p>Your response has been recorded. </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen ${currentTheme.bg} py-10 px-4 font-sans text-gray-900`}>
@@ -78,21 +145,27 @@ const FormPreview = ({ formData, fields }) => {
         </div>
 
         {/* Header */}
-        <div className={`bg-white rounded-md shadow border-t-8 ${currentTheme.border} mb-8 p-6`}>
-          <h1 className="text-2xl font-bold mb-2">{formData.title || "Untitled Form"}</h1>
-          <div className="text-gray-600 text-sm prose">
-            <Markdown>{formData.description}</Markdown>
+        <div className="mb-4 rounded-md shadow overflow-hidden">
+          <div className={`bg-white border-t-10 ${currentTheme.border} p-6`}>
+            <h1 className="text-3xl font-semibold mb-2">{formData.title || "Untitled Form"}</h1>
+            <div className="text-gray-600 text-sm prose">
+              <Markdown>{formData.description}</Markdown>
+            </div>
+          </div>
+          <div className={`border-t bg-white text-red-600 text-sm px-6 py-2 border-gray-300 rounded-b-md w-full`}>
+            * Indicates required question
           </div>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-2">
           {fields.map((field, index) => (
             <div key={index} className="bg-white p-5 rounded-md shadow-sm border border-gray-200">
               <label className="block font-medium text-gray-900 mb-2">
                 {field.label} {field.required && <span className="text-red-500">*</span>}
               </label>
 
+              {/* MCQ */}
               {field.type === "mcq" && (
                 <div className="space-y-2">
                   {field.options?.map((option, i) => (
@@ -125,6 +198,7 @@ const FormPreview = ({ formData, fields }) => {
                 </div>
               )}
 
+              {/* Dropdown */}
               {field.type === "dropdown" && (
                 <select
                   required={field.required}
@@ -138,6 +212,7 @@ const FormPreview = ({ formData, fields }) => {
                 </select>
               )}
 
+              {/* Checkbox */}
               {field.type === "checkbox" && (
                 <div className="space-y-2">
                   {field.options?.map((opt, i) => (
@@ -153,6 +228,7 @@ const FormPreview = ({ formData, fields }) => {
                 </div>
               )}
 
+              {/* Slider */}
               {field.type === "slider" && (
                 <div>
                   <input
@@ -166,6 +242,7 @@ const FormPreview = ({ formData, fields }) => {
                 </div>
               )}
 
+              {/* Textarea */}
               {field.type === "textarea" && (
                 <textarea
                   rows={4}
@@ -176,15 +253,32 @@ const FormPreview = ({ formData, fields }) => {
                 />
               )}
 
+              {/* File Upload */}
               {field.type === "file" && (
-                <input
-                  type="file"
-                  required={field.required}
-                  className="border py-1 px-2 border-gray-300 rounded"
-                  onChange={(e) => handleChange(e, field)}
-                />
+                <div className="relative space-y-1">
+                  <label
+                    className={`cursor-pointer text-sm inline-block px-2 py-1 rounded border border-gray-300 ${currentTheme.bg} hover:scale-105 active:scale-90 transition-transform`}
+                  >
+                    <span className="flex items-center gap-2 justify-between">
+                      <Upload size={16} /> Add File
+                    </span>
+                    <input
+                      type="file"
+                      required={field.required}
+                      className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                      onChange={(e) => handleChange(e, field)}
+                    />
+                  </label>
+
+                  {fileNames[field.id] && (
+                    <p className="text-xs text-gray-400 truncate max-w-xs">
+                      {fileNames[field.id]}
+                    </p>
+                  )}
+                </div>
               )}
 
+              {/* Default input */}
               {!["mcq", "dropdown", "checkbox", "slider", "textarea", "file"].includes(field.type) && (
                 <input
                   type={field.type}
