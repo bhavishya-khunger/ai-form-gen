@@ -12,7 +12,7 @@ function App() {
       <Router>
         <div className="min-h-screen bg-white dark:bg-black transition-colors duration-200">
           <Routes>
-            <Route path="/" element={<LandingPage />} />
+            <Route path="/" element={<Dashboard />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/form/new" element={<FormBuilder />} />
             <Route path="/form/:id" element={<FormBuilder />} />
