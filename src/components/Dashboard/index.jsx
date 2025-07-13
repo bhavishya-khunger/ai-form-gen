@@ -1,46 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Plus, FileText, Trash2, Moon, Sun, Eye, Pencil } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
-const Modal = ({ isOpen, onClose, onSubmit, title, setTitle }) => {
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center px-4">
-      <div className="bg-white dark:bg-gray-900 w-full max-w-md rounded-lg p-6 shadow-lg">
-        <h2 className="text-xl font-semibold mb-4 text-black dark:text-white">Create a New Form</h2>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Enter form title"
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-black text-black dark:text-white"
-        />
-        <div className="flex justify-end gap-3 mt-6">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-red-500"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={onSubmit}
-            className="px-4 py-2 text-sm text-white bg-indigo-600 hover:bg-indigo-700 rounded-md"
-          >
-            Create
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 const Dashboard = () => {
   const [forms, setForms] = useState([]);
-  const [newFormTitle, setNewFormTitle] = useState('');
-  const [showModal, setShowModal] = useState(false);
   const { darkMode, toggleDarkMode } = useTheme();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const savedForms = JSON.parse(localStorage.getItem('savedForms') || '[]');
@@ -48,24 +14,25 @@ const Dashboard = () => {
   }, []);
 
   const createNewForm = () => {
-    const title = newFormTitle.trim() || 'Untitled Form';
     const newForm = {
       id: crypto.randomUUID(),
-      title,
+      title: 'Untitled Form',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       formData: {
-        title,
+        title: 'Untitled Form',
         description: '',
         fields: [],
       },
     };
+    
     const updatedForms = [...forms, newForm];
     setForms(updatedForms);
     localStorage.setItem('savedForms', JSON.stringify(updatedForms));
     localStorage.setItem('formBuilderData', JSON.stringify(newForm.formData));
-    setNewFormTitle('');
-    setShowModal(false);
+    
+    // Navigate directly to the form builder
+    navigate(`/form/${newForm.id}`);
   };
 
   const deleteForm = (id) => {
@@ -95,7 +62,7 @@ const Dashboard = () => {
               {darkMode ? <Sun size={20} className="text-yellow-400" /> : <Moon size={20} />}
             </button>
             <button
-              onClick={() => setShowModal(true)}
+              onClick={createNewForm}
               className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow-sm"
             >
               <Plus size={16} />
@@ -103,18 +70,6 @@ const Dashboard = () => {
             </button>
           </div>
         </div>
-
-        {/* Modal */}
-        <Modal
-          isOpen={showModal}
-          onClose={() => {
-            setShowModal(false);
-            setNewFormTitle('');
-          }}
-          onSubmit={createNewForm}
-          title={newFormTitle}
-          setTitle={setNewFormTitle}
-        />
 
         {/* Forms grid */}
         {forms.length === 0 ? (

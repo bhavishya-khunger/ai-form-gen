@@ -103,17 +103,6 @@ const FormPreview = ({ formData, fields }) => {
     return (
       <div className={`min-h-screen ${currentTheme.bg} py-10 px-4 font-sans text-gray-900`}>
         <div className="max-w-3xl mx-auto">
-          {/* Theme Selection */}
-          <div className="mb-6 flex gap-3 items-center">
-            <label className="font-medium">Choose Theme:</label>
-            {Object.keys(themeColors).map((theme) => (
-              <button
-                key={theme}
-                className={`h-6 w-6 rounded-full ${themeColors[theme].border} border-2 ${selectedTheme === theme ? "ring-2 ring-black" : ""}`}
-                onClick={() => setSelectedTheme(theme)}
-              />
-            ))}
-          </div>
 
           {/* Header */}
           <div className="mb-4 rounded-md shadow overflow-hidden">
@@ -132,17 +121,6 @@ const FormPreview = ({ formData, fields }) => {
   return (
     <div className={`min-h-screen ${currentTheme.bg} py-10 px-4 font-sans text-gray-900`}>
       <div className="max-w-3xl mx-auto">
-        {/* Theme Selection */}
-        <div className="mb-6 flex gap-3 items-center">
-          <label className="font-medium">Choose Theme:</label>
-          {Object.keys(themeColors).map((theme) => (
-            <button
-              key={theme}
-              className={`h-6 w-6 rounded-full ${themeColors[theme].border} border-2 ${selectedTheme === theme ? "ring-2 ring-black" : ""}`}
-              onClick={() => setSelectedTheme(theme)}
-            />
-          ))}
-        </div>
 
         {/* Header */}
         <div className="mb-4 rounded-md shadow overflow-hidden">
