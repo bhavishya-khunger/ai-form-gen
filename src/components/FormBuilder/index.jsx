@@ -28,7 +28,7 @@ const FormBuilder = () => {
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [activeTab, setActiveTab] = useState('questions');
   const [isSaving, setIsSaving] = useState(false);
-  const [isEditable, setIsEditable] = useState(false);
+  const [isEditable, setIsEditable] = useState(true);
   const navigate = useNavigate();
 
   // Debounce function to prevent too many API calls
@@ -49,7 +49,7 @@ const FormBuilder = () => {
         }
       });
       console.log(res);
-
+      navigate('/dashboard');
     } catch (e) {
       console.log(e);
     }
@@ -65,12 +65,18 @@ const FormBuilder = () => {
               Authorization: `Bearer ${localStorage.getItem('token')}`
             }
           });
-          setIsEditable(response.data.form.isEditable);
+          // Add explicit check for published status
+          const editable = response.data.form.isEditable !== false;
+          setIsEditable(editable);
           setFormData(response.data.form);
+        } else {
+          // New form - always editable
+          setIsEditable(true);
         }
       } catch (error) {
         toast.error('Failed to load form');
         console.error('Error fetching form:', error);
+        // Consider what should happen here - maybe navigate back?
       }
     };
 
@@ -183,13 +189,22 @@ const FormBuilder = () => {
     }
   };
 
-  if (isEditable) {
+  if (!isEditable) {
     return (
       <div className='flex flex-col gap-6 h-screen w-full p-4 text-center items-center justify-center'>
         <FaSadTear color='purple' size={60} />
-        This form is already published. You cannot edit the form now!
+        <h2 className="text-xl font-semibold">This form is published</h2>
+        <p className="text-gray-600 dark:text-gray-400">
+          Published forms cannot be edited. You can duplicate it to make changes.
+        </p>
+        <button
+          onClick={() => navigate('/dashboard')}
+          className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+        >
+          Back to Dashboard
+        </button>
       </div>
-    )
+    );
   }
   return (
     <div className="min-h-screen bg-white dark:bg-black transition-colors duration-200">

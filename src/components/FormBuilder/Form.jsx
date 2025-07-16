@@ -40,81 +40,11 @@ const Form = () => {
 };
 
 const themeColors = {
-  indigo: {
-    bg: "bg-indigo-100",
-    border: "border-indigo-700",
-    button: "bg-indigo-600 hover:bg-indigo-700",
-  },
-  blue: {
-    bg: "bg-blue-100",
-    border: "border-blue-700",
-    button: "bg-blue-600 hover:bg-blue-700",
-  },
-  green: {
-    bg: "bg-green-100",
-    border: "border-green-700",
-    button: "bg-green-600 hover:bg-green-700",
-  },
-  red: {
-    bg: "bg-red-100",
-    border: "border-red-700",
-    button: "bg-red-600 hover:bg-red-700",
-  },
-  yellow: {
-    bg: "bg-yellow-100",
-    border: "border-yellow-700",
-    button: "bg-yellow-600 hover:bg-yellow-700",
-  },
-  purple: {
-    bg: "bg-purple-100",
-    border: "border-purple-700",
-    button: "bg-purple-600 hover:bg-purple-700",
-  },
-  pink: {
-    bg: "bg-pink-100",
-    border: "border-pink-700",
-    button: "bg-pink-600 hover:bg-pink-700",
-  },
-  teal: {
-    bg: "bg-teal-100",
-    border: "border-teal-700",
-    button: "bg-teal-600 hover:bg-teal-700",
-  },
-  orange: {
-    bg: "bg-orange-100",
-    border: "border-orange-700",
-    button: "bg-orange-600 hover:bg-orange-700",
-  },
-  gray: {
-    bg: "bg-gray-100",
-    border: "border-gray-700",
-    button: "bg-gray-600 hover:bg-gray-700",
-  },
-  lime: {
-    bg: "bg-lime-100",
-    border: "border-lime-700",
-    button: "bg-lime-600 hover:bg-lime-700",
-  },
-  emerald: {
-    bg: "bg-emerald-100",
-    border: "border-emerald-700",
-    button: "bg-emerald-600 hover:bg-emerald-700",
-  },
-  cyan: {
-    bg: "bg-cyan-100",
-    border: "border-cyan-700",
-    button: "bg-cyan-600 hover:bg-cyan-700",
-  },
   rose: {
     bg: "bg-rose-100",
     border: "border-rose-700",
     button: "bg-rose-600 hover:bg-rose-700",
-  },
-  fuchsia: {
-    bg: "bg-fuchsia-100",
-    border: "border-fuchsia-700",
-    button: "bg-fuchsia-600 hover:bg-fuchsia-700",
-  },
+  }
 };
 
 const getRandomThemeKey = () => {

@@ -42,7 +42,7 @@ const FieldEditor = ({ field, onRemove, onChange, index }) => {
             <option value="checkbox">Checkboxes</option>
             <option value="dropdown">Dropdown</option>
             <option value="slider">Slider</option>
-            <option value="file">File Upload</option>
+            {/* <option value="file">File Upload</option> */}
           </select>
 
           <button

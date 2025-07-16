@@ -34,7 +34,7 @@ The JSON must follow this structure:
     {
       "id": "random-uuid",
       "label": "string",
-      "type": "text | textarea | email | number | date | mcq | checkbox | dropdown | slider | file",
+      "type": "text | textarea | email | number | date | mcq | checkbox | dropdown | slider",
       "required": boolean,
       "options": [array of strings] // only for mcq, checkbox, and dropdown
       "min": number, // only for slider
@@ -43,7 +43,7 @@ The JSON must follow this structure:
   ]
 }
 
-Use all available field types (unless otherwise specified) and generate realistic, relevant questions. If the prompt implies a particular structure (like personal info, preferences, or feedback), reflect that with appropriate input types.
+Use all available field types (unless otherwise specified), if file needed - ask for it's link and generate realistic, relevant questions. If the prompt implies a particular structure (like personal info, preferences, or feedback), reflect that with appropriate input types.
 `,
       });
 

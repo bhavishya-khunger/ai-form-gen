@@ -15,7 +15,7 @@ const FormResponses = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isFullScreen, setIsFullScreen] = useState(false);
-    const [accept, setAccept] = useState();
+    const [accept, setAccept] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -24,6 +24,7 @@ const FormResponses = () => {
                 // Fetch form details
                 const formRes = await axios.get(`${API_BASE_URL}/api/forms/${formId}`);
                 setFormDetails(formRes.data.form);
+                setAccept(formRes.data.form.accepting);
 
                 // Fetch responses
                 const token = localStorage.getItem('token');
@@ -53,9 +54,10 @@ const FormResponses = () => {
                 }
             });
             setAccept(res.data.form.accepting);
-            accept ?  toast('Form Closed!', {icon: '🔒'}) : toast.success('Form Open!');
+            accept ? toast('Form Closed!', { icon: '🔒' }) : toast.success('Form Open!');
         } catch (error) {
             console.log(error);
+            toast.error('Publish the form to accept responses!');
         }
     }
 
@@ -65,7 +67,7 @@ const FormResponses = () => {
         // Prepare data for Excel
         const data = responses.map(response => {
             const row = {
-                'Response ID': response._id,
+                'Response ID': response.responseId,
                 'Submitted At': new Date(response.submittedAt).toLocaleString()
             };
 
