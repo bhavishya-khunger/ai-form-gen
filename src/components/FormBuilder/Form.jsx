@@ -1,126 +1,109 @@
-import { useParams } from 'react-router-dom';
-import { useMemo, useState, useEffect } from 'react';
-import { Upload } from "lucide-react";
+import { Link, useParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { AlertCircle, Upload } from "lucide-react";
 import Markdown from "react-markdown";
+import axios from 'axios';
+import { toast } from 'react-hot-toast';
+import { isTokenValid } from '../../utils/ProtectedRoute';
+
+const API_BASE_URL = import.meta.env.VITE_SERVER_URI;
 
 const Form = () => {
   const { id } = useParams();
-
-  const forms = useMemo(() => {
-    try {
-      const data = localStorage.getItem('savedForms');
-      return data ? JSON.parse(data) : [];
-    } catch {
-      return [];
-    }
-  }, []);
-
-  const [isOpen, setIsOpen] = useState(true);
+  const [formData, setFormData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
 
-  const formData = forms.find((f) => f.id === id).formData;
-  console.log(formData);
+  useEffect(() => {
+    const fetchForm = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/forms/${id}`);
+        setFormData(response.data.form);
+        setIsOpen(response.data.form.accepting || false);
+      } catch (err) {
+        setError(err.response?.data?.error || 'Failed to load form');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  if (!formData) {
-    return (
-      <div className="text-center mt-10 text-gray-600">
-        <h2 className="text-xl font-semibold">Form not found.</h2>
-        <p className="mt-2">Please check the form link or go back to the homepage.</p>
-      </div>
-    );
-  }
+    fetchForm();
+  }, [id]);
 
-  return <Preview isOpen={isOpen} isSubmitted={isSubmitted} formData={formData} fields={formData.fields} />;
+  if (loading) return <div className="text-center mt-10 text-gray-600"><h2 className="text-xl font-semibold">Loading form...</h2></div>;
+  if (error) return <div className="text-center mt-10 text-gray-600"><h2 className="text-xl font-semibold">Error loading form</h2><p className="mt-2">{error}</p></div>;
+  if (!formData) return <div className="text-center mt-10 text-gray-600"><h2 className="text-xl font-semibold">Form not found.</h2><p className="mt-2">Please check the form link or go back to the homepage.</p></div>;
+
+  return <Preview isOpen={isOpen} setIsOpen={setIsOpen} isSubmitted={isSubmitted} formData={formData} fields={formData.fields} formId={id} setIsSubmitted={setIsSubmitted} />;
 };
 
-export default Form;
-
 const themeColors = {
-  // Primary colors (purple/indigo focus)
-  purple: {
-    bg: "bg-purple-100",
-    border: "border-purple-700",
-    button: "bg-purple-600 hover:bg-purple-700",
-  },
   indigo: {
     bg: "bg-indigo-100",
     border: "border-indigo-700",
     button: "bg-indigo-600 hover:bg-indigo-700",
   },
-
-  // Cool tones
   blue: {
     bg: "bg-blue-100",
     border: "border-blue-700",
     button: "bg-blue-600 hover:bg-blue-700",
   },
-  cyan: {
-    bg: "bg-cyan-100",
-    border: "border-cyan-700",
-    button: "bg-cyan-600 hover:bg-cyan-700",
+  green: {
+    bg: "bg-green-100",
+    border: "border-green-700",
+    button: "bg-green-600 hover:bg-green-700",
   },
-  sky: {
-    bg: "bg-sky-100",
-    border: "border-sky-700",
-    button: "bg-sky-600 hover:bg-sky-700",
-  },
-
-  // Warm tones
   red: {
     bg: "bg-red-100",
     border: "border-red-700",
     button: "bg-red-600 hover:bg-red-700",
+  },
+  yellow: {
+    bg: "bg-yellow-100",
+    border: "border-yellow-700",
+    button: "bg-yellow-600 hover:bg-yellow-700",
+  },
+  purple: {
+    bg: "bg-purple-100",
+    border: "border-purple-700",
+    button: "bg-purple-600 hover:bg-purple-700",
+  },
+  pink: {
+    bg: "bg-pink-100",
+    border: "border-pink-700",
+    button: "bg-pink-600 hover:bg-pink-700",
+  },
+  teal: {
+    bg: "bg-teal-100",
+    border: "border-teal-700",
+    button: "bg-teal-600 hover:bg-teal-700",
   },
   orange: {
     bg: "bg-orange-100",
     border: "border-orange-700",
     button: "bg-orange-600 hover:bg-orange-700",
   },
-  amber: {
-    bg: "bg-amber-100",
-    border: "border-amber-700",
-    button: "bg-amber-600 hover:bg-amber-700",
-  },
-
-  // Natural tones
-  green: {
-    bg: "bg-green-100",
-    border: "border-green-700",
-    button: "bg-green-600 hover:bg-green-700",
-  },
-  emerald: {
-    bg: "bg-emerald-100",
-    border: "border-emerald-700",
-    button: "bg-emerald-600 hover:bg-emerald-700",
+  gray: {
+    bg: "bg-gray-100",
+    border: "border-gray-700",
+    button: "bg-gray-600 hover:bg-gray-700",
   },
   lime: {
     bg: "bg-lime-100",
     border: "border-lime-700",
     button: "bg-lime-600 hover:bg-lime-700",
   },
-
-  // Neutrals
-  gray: {
-    bg: "bg-gray-100",
-    border: "border-gray-700",
-    button: "bg-gray-600 hover:bg-gray-700",
+  emerald: {
+    bg: "bg-emerald-100",
+    border: "border-emerald-700",
+    button: "bg-emerald-600 hover:bg-emerald-700",
   },
-  slate: {
-    bg: "bg-slate-100",
-    border: "border-slate-700",
-    button: "bg-slate-600 hover:bg-slate-700",
-  },
-  zinc: {
-    bg: "bg-zinc-100",
-    border: "border-zinc-700",
-    button: "bg-zinc-600 hover:bg-zinc-700",
-  },
-
-  // Accents
-  pink: {
-    bg: "bg-pink-100",
-    border: "border-pink-700",
-    button: "bg-pink-600 hover:bg-pink-700",
+  cyan: {
+    bg: "bg-cyan-100",
+    border: "border-cyan-700",
+    button: "bg-cyan-600 hover:bg-cyan-700",
   },
   rose: {
     bg: "bg-rose-100",
@@ -131,83 +114,144 @@ const themeColors = {
     bg: "bg-fuchsia-100",
     border: "border-fuchsia-700",
     button: "bg-fuchsia-600 hover:bg-fuchsia-700",
-  }
+  },
 };
 
-const Preview = ({ isSubmitted = false, isOpen = true, formData, fields }) => {
+const getRandomThemeKey = () => {
+  const themeKeys = Object.keys(themeColors);
+  const randomIndex = Math.floor(Math.random() * themeKeys.length);
+  return themeKeys[randomIndex];
+};
+
+const Preview = ({ isOpen, setIsOpen, isSubmitted, formData, fields, formId, setIsSubmitted }) => {
   const [formValues, setFormValues] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [otherInputs, setOtherInputs] = useState({});
-  const [selectedTheme, setSelectedTheme] = useState(() => {
-    const themes = Object.keys(themeColors);
-    const randomIndex = Math.floor(Math.random() * themes.length);
-    return themes[randomIndex];
-  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [fileNames, setFileNames] = useState({});
 
+  // Use useEffect to check login status once on mount
+  const [boolLogin, setBoolLogin] = useState(false);
+  useEffect(() => {
+    const checkLogin = () => {
+      const token = localStorage.getItem('token');
+      const token_expires_at = localStorage.getItem('token_expires_at');
+      const isValid = isTokenValid(token, token_expires_at);
+      setBoolLogin(isValid);
+    };
+
+    checkLogin();
+  }, []);
+
   const handleChange = (e, field, option = null) => {
-    let value;
     const file = e?.target?.files?.[0];
+    if (file) setFileNames(prev => ({ ...prev, [field.id]: file.name }));
 
-    if (file) {
-      setFileNames((prev) => ({
-        ...prev,
-        [field.id]: file.name,
-      }));
+    let value;
+    switch (field.type) {
+      case 'mcq':
+      case 'dropdown':
+        value = option || e.target.value;
+        break;
+      case 'checkbox':
+        const prev = formValues[field.label] || [];
+        value = e.target.checked ? [...prev, option] : prev.filter(item => item !== option);
+        break;
+      case 'slider':
+        value = Number(e.target.value);
+        break;
+      case 'file':
+        value = file;
+        break;
+      default:
+        value = e.target.value;
     }
 
-    if (field.type === "mcq" || field.type === "dropdown") {
-      value = option;
-    } else if (field.type === "checkbox") {
-      const prev = formValues[field.label] || [];
-      value = e.target.checked
-        ? [...prev, option]
-        : prev.filter((item) => item !== option);
-    } else if (field.type === "slider") {
-      value = Number(e.target.value);
-    } else if (field.type === "file") {
-      value = file;
-    } else {
-      value = e.target.value;
-    }
-
-    setFormValues((prev) => ({ ...prev, [field.label]: value }));
+    setFormValues(prev => ({ ...prev, [field.label]: value }));
   };
 
-  const handleOtherChange = (fieldLabel, val) => {
-    setOtherInputs((prev) => ({ ...prev, [fieldLabel]: val }));
-    setFormValues((prev) => ({ ...prev, [fieldLabel]: val }));
+  const handleOtherChange = (label, value) => {
+    setOtherInputs(prev => ({ ...prev, [label]: value }));
+    setFormValues(prev => ({ ...prev, [label]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    setTimeout(() => {
+    try {
+      const formDataToSubmit = new FormData();
+      const answers = {};
+
+      Object.entries(formValues).forEach(([label, value]) => {
+        if (value instanceof File) {
+          formDataToSubmit.append('files', value);
+          answers[label] = value.name;
+        } else {
+          answers[label] = value;
+        }
+      });
+
+      formDataToSubmit.append('answers', JSON.stringify(answers));
+
+      const config = { headers: { 'Content-Type': 'multipart/form-data' } };
+
+      if (formData.authReq) {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          localStorage.setItem(`form-${formId}-draft`, JSON.stringify(formValues));
+          toast.error('Please log in to submit the form');
+          window.location.href = '/login';
+          return;
+        }
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+
+      await axios.post(`${API_BASE_URL}/api/forms/${formId}/submit`, formDataToSubmit, config);
+      localStorage.removeItem(`form-${formId}-draft`);
+      setIsSubmitted(true);
+      toast.success('Form submitted successfully!');
+    } catch (error) {
+      console.error('Submission error:', error);
+      const errorMsg = error.response?.data?.error || error.message || 'Submission failed';
+      toast.error(errorMsg);
+    } finally {
       setIsSubmitting(false);
-    }, 800);
+    }
   };
 
-  const currentTheme = themeColors[selectedTheme];
+  const currentTheme = themeColors[getRandomThemeKey()];
 
-  if (isSubmitted || !isOpen) {
+  if (isSubmitted) {
     return (
       <div className={`min-h-screen ${currentTheme.bg} py-10 px-4 font-sans text-gray-900`}>
         <div className="max-w-3xl mx-auto">
-
-          {/* Header */}
           <div className="mb-4 rounded-md shadow overflow-hidden">
             <div className={`bg-white border-t-10 ${currentTheme.border} p-6`}>
               <h1 className="text-3xl font-semibold mb-2">{formData.title || "Untitled Form"}</h1>
               <div className="text-gray-600 text-sm mt-4">
-                {isSubmitted ? <p>Your response has been recorded. <br />You can only fill this form once. If you think it is a mistake, contact the owner.</p> : <p>The form <strong>{formData.title}</strong> is no longer accepting responses. <br /> If you think it is a mistake, contact the owner.</p>}
+                <p>Your response has been recorded.</p>
               </div>
             </div>
           </div>
         </div>
-        <p className='text-center hover:text-gray-700 text-sm text-gray-500'>
-          <a href="/dashboard">Powered by Formify - Create Forms in seconds</a>
-        </p>
+      </div>
+    );
+  }
+
+  if (!isOpen) {
+    return (
+      <div className={`min-h-screen ${currentTheme.bg} py-10 px-4 font-sans text-gray-900`}>
+        <div className="max-w-3xl mx-auto">
+          <div className="mb-4 rounded-md shadow overflow-hidden">
+            <div className={`bg-white border-t-10 ${currentTheme.border} p-6`}>
+              <h1 className="text-3xl font-semibold mb-2">{formData.title || "Untitled Form"}</h1>
+              <div className="text-gray-600 text-sm mt-4">
+                <p>The form <strong>{formData.title}</strong> is no longer accepting responses.
+                  Try contacting the owner of the form if you think this is a mistake.</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -228,6 +272,25 @@ const Preview = ({ isSubmitted = false, isOpen = true, formData, fields }) => {
             * Indicates required question
           </div>
         </div>
+
+        {formData.authReq && !boolLogin && (
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-amber-100 border border-amber-300 text-amber-800 py-3 px-4 mb-4 rounded-lg">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="h-5 w-5 text-amber-600" />
+              <div>
+                <p className="font-medium">Login required to submit this form</p>
+                <p className="text-sm mt-1">Your responses will be LOST if you do not login!</p>
+              </div>
+            </div>
+            <Link
+              to={`/login?redirect=/forms/view/${formId}`}
+              state={{ formValues }}
+              className="whitespace-nowrap bg-amber-600 hover:bg-amber-700 text-white py-1.5 px-4 rounded-md text-sm font-medium transition-colors"
+            >
+              Login to Submit
+            </Link>
+          </div>
+        )}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-2">
@@ -377,3 +440,5 @@ const Preview = ({ isSubmitted = false, isOpen = true, formData, fields }) => {
     </div>
   );
 };
+
+export default Form;

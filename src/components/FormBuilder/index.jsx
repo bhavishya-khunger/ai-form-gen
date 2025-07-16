@@ -1,5 +1,4 @@
-// src/components/FormBuilder.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
 import FieldEditor from './FieldEditor';
@@ -13,6 +12,11 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import SortableFieldWrapper from './SortableFieldWrapper.jsx';
+import axios from 'axios';
+import { toast } from 'react-hot-toast';
+import { FaSadCry, FaSadTear } from 'react-icons/fa';
+
+const API_BASE_URL = import.meta.env.VITE_SERVER_URI;
 
 const FormBuilder = () => {
   const { id: formId } = useParams();
@@ -23,58 +27,91 @@ const FormBuilder = () => {
   });
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [activeTab, setActiveTab] = useState('questions');
+  const [isSaving, setIsSaving] = useState(false);
+  const [isEditable, setIsEditable] = useState(false);
   const navigate = useNavigate();
-  const { darkMode } = useTheme();
 
-  useEffect(() => {
-    if (formId) {
-      const savedForms = JSON.parse(localStorage.getItem('savedForms') || '[]');
-      const existingForm = savedForms.find(f => f.id === formId);
-      if (existingForm) {
-        setFormData(existingForm.formData);
-      }
-    } else {
-      const draft = localStorage.getItem('formBuilderData');
-      if (draft) setFormData(JSON.parse(draft));
-    }
-  }, [formId]);
-
-  const saveForm = (isDraft = true) => {
-    const savedForms = JSON.parse(localStorage.getItem('savedForms') || '[]');
-
-    if (formId) {
-      const updatedForms = savedForms.map(form =>
-        form.id === formId
-          ? {
-              ...form,
-              title: formData.title,
-              formData,
-              updatedAt: new Date().toISOString(),
-            }
-          : form
-      );
-      localStorage.setItem('savedForms', JSON.stringify(updatedForms));
-    } else {
-      const newForm = {
-        id: crypto.randomUUID(),
-        title: formData.title,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        formData,
-      };
-      localStorage.setItem('savedForms', JSON.stringify([...savedForms, newForm]));
-    }
-
-    if (isDraft) {
-      localStorage.setItem('formBuilderData', JSON.stringify(formData));
-    } else {
-      localStorage.removeItem('formBuilderData');
-    }
-    navigate('/dashboard');
+  // Debounce function to prevent too many API calls
+  const debounce = (func, delay) => {
+    let timer;
+    return (...args) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => func(...args), delay);
+    };
   };
 
+  const publishForm = async () => {
+    alert("This action is NOT reversible.");
+    try {
+      const res = await axios.post(`${API_BASE_URL}/api/forms/${formId}/publish`, {}, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      console.log(res);
+
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  // Fetch form data from API
+  useEffect(() => {
+    const fetchForm = async () => {
+      try {
+        if (formId) {
+          const response = await axios.get(`${API_BASE_URL}/api/forms/${formId}`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+          setIsEditable(response.data.form.isEditable);
+          setFormData(response.data.form);
+        }
+      } catch (error) {
+        toast.error('Failed to load form');
+        console.error('Error fetching form:', error);
+      }
+    };
+
+    fetchForm();
+  }, [formId]);
+
+  // Real-time save to backend
+  const saveToBackend = useCallback(debounce(async (data) => {
+    if (!formId) return; // Only save existing forms
+
+    try {
+      setIsSaving(true);
+      await axios.post(
+        `${API_BASE_URL}/api/forms/${formId}/update`,
+        { formData: data },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+    } catch (error) {
+      console.error('Error saving form:', error);
+      toast.error('Failed to save changes');
+    } finally {
+      setIsSaving(false);
+    }
+  }, 1000), [formId]);
+
+  // Update form data and trigger save
+  const updateFormData = useCallback((updates) => {
+    setFormData(prev => {
+      const newData = { ...prev, ...updates };
+      saveToBackend(newData);
+      return newData;
+    });
+  }, [saveToBackend]);
+
   const handleAIGenerate = (generatedForm) => {
-    setFormData({
+    updateFormData({
       title: generatedForm.title,
       description: generatedForm.description,
       fields: generatedForm.fields,
@@ -89,9 +126,8 @@ const FormBuilder = () => {
       type: 'text',
       required: false,
     };
-    setFormData({
-      ...formData,
-      fields: [...formData.fields, newField],
+    updateFormData({
+      fields: [...formData.fields, newField]
     });
   };
 
@@ -101,10 +137,60 @@ const FormBuilder = () => {
       const oldIndex = formData.fields.findIndex(f => f.id === active.id);
       const newIndex = formData.fields.findIndex(f => f.id === over.id);
       const newFields = arrayMove(formData.fields, oldIndex, newIndex);
-      setFormData({ ...formData, fields: newFields });
+      updateFormData({ fields: newFields });
     }
   };
 
+  const saveForm = async (isDraft = true) => {
+    try {
+      setIsSaving(true);
+
+      if (formId) {
+        // Update existing form
+        console.log(formData);
+        await axios.post(
+          `${API_BASE_URL}/api/forms/${formId}/update`,
+          { formData },
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+          }
+        );
+        toast.success('Form updated successfully!');
+      } else {
+        // Create new form
+        const response = await axios.post(
+          `${API_BASE_URL}/api/forms`,
+          { formData },
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+          }
+        );
+        toast.success('Form created successfully!');
+        navigate(`/form/${response.data._id}`);
+      }
+    } catch (error) {
+      console.error('Error saving form:', error);
+      toast.error('Failed to save form');
+    } finally {
+      setIsSaving(false);
+      if (!isDraft) {
+        navigate('/dashboard');
+      }
+    }
+  };
+
+  if (isEditable) {
+    return (
+      <div className='flex flex-col gap-6 h-screen w-full p-4 text-center items-center justify-center'>
+        <FaSadTear color='purple' size={60} />
+        This form is already published. You cannot edit the form now!
+      </div>
+    )
+  }
   return (
     <div className="min-h-screen bg-white dark:bg-black transition-colors duration-200">
       {isPreviewMode ? (
@@ -113,19 +199,24 @@ const FormBuilder = () => {
         <div className="max-w-4xl mx-auto p-6">
           <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden transition-colors">
             <div className="border-b border-gray-200 dark:border-gray-700 px-6 py-4">
-              <input
-                type="text"
-                className="text-2xl font-medium w-full outline-none border-none focus:ring-0 p-0 text-black dark:text-white bg-transparent"
-                placeholder="Form title"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              />
+              <div className="flex items-center justify-between">
+                <input
+                  type="text"
+                  className="text-2xl font-medium w-full outline-none border-none focus:ring-0 p-0 text-black dark:text-white bg-transparent"
+                  placeholder="Form title"
+                  value={formData.title}
+                  onChange={(e) => updateFormData({ title: e.target.value })}
+                />
+                {isSaving && (
+                  <span className="text-sm text-gray-500 ml-2">Saving...</span>
+                )}
+              </div>
               <textarea
                 rows={3}
                 className="text-gray-600 dark:text-gray-300 w-full outline-none border-none focus:ring-0 p-0 mt-1 bg-transparent resize-none"
                 placeholder="Form Description"
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) => updateFormData({ description: e.target.value })}
               />
             </div>
 
@@ -133,21 +224,19 @@ const FormBuilder = () => {
               <nav className="-mb-px flex">
                 <button
                   onClick={() => setActiveTab('questions')}
-                  className={`whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm ${
-                    activeTab === 'questions'
-                      ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                      : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
-                  }`}
+                  className={`whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm ${activeTab === 'questions'
+                    ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
+                    }`}
                 >
                   Questions
                 </button>
                 <button
                   onClick={() => setActiveTab('ai')}
-                  className={`whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm ${
-                    activeTab === 'ai'
-                      ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                      : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
-                  }`}
+                  className={`whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm ${activeTab === 'ai'
+                    ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
+                    }`}
                 >
                   AI Generator
                 </button>
@@ -205,13 +294,11 @@ const FormBuilder = () => {
             <div className="border-t border-gray-200 dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-900 flex justify-between items-center transition-colors">
               <button
                 type="button"
-                onClick={() => {
-                  saveForm(true);
-                  navigate('/dashboard');
-                }}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-700 text-sm font-medium rounded-md text-black dark:text-white bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800"
+                onClick={() => saveForm()}
+                disabled={isSaving}
+                className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-700 text-sm font-medium rounded-md text-black dark:text-white bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
               >
-                Save Draft
+                {isSaving ? 'Saving...' : 'Save Draft'}
               </button>
               <div className="flex gap-2">
                 <button
@@ -223,14 +310,11 @@ const FormBuilder = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    saveForm(false);
-                    alert('Form published successfully!');
-                    navigate('/dashboard');
-                  }}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                  onClick={() => publishForm(false)}
+                  disabled={isSaving}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
                 >
-                  Publish
+                  {isSaving ? 'Publishing...' : 'Publish'}
                 </button>
               </div>
             </div>

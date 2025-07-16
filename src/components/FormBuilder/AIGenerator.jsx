@@ -22,7 +22,7 @@ const AIGenerator = ({ onGenerate }) => {
 
     try {
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-preview-04-17',
+        model: 'gemini-2.5-pro',
         contents: `Create a JSON form based on this prompt:\n"${prompt.trim()}".  
 Always include a detailed description in markdown format, using bullet points or paragraphs as appropriate.
 
@@ -90,16 +90,6 @@ Use all available field types (unless otherwise specified) and generate realisti
             } transition`}
           >
             {isLoading ? 'Generating...' : <><Wand2 size={16} />Generate Form</>}
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setPrompt('');
-              onGenerate(generateRandomForm());
-            }}
-            className="flex items-center gap-2 px-4 py-2 bg-purple-100 dark:bg-purple-900/50 rounded-md text-purple-800 dark:text-purple-200 hover:bg-purple-200 transition"
-          >
-            <Sparkles size={16} />Random Form
           </button>
         </div>
       </form>
