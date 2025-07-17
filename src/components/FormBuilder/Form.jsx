@@ -143,6 +143,9 @@ const Preview = ({ isOpen, setIsOpen, isSubmitted, formData, fields, formId, set
     } catch (error) {
       console.error('Submission error:', error);
       const errorMsg = error.response?.data?.error || error.message || 'Submission failed';
+      if (error.response.data.code == "NAR") {
+        window.location.reload();
+      }
       toast.error(errorMsg);
     } finally {
       setIsSubmitting(false);
