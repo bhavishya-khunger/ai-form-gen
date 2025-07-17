@@ -86,7 +86,7 @@ const Dashboard = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
-              Your Forms
+              Dashboard
             </h1>
             <p className="text-gray-500 dark:text-gray-400 mt-1">
               {forms.length} {forms.length === 1 ? 'form' : 'forms'} created
@@ -104,6 +104,48 @@ const Dashboard = () => {
             </button>
           </div>
         </div>
+
+        <div className="bg-white border mb-16 dark:bg-gray-900 rounded-2xl shadow-lg p-6 max-w-5xl mx-auto">
+          {/* <h2 className="text-2xl font-bold text-center text-gray-800 dark:text-white mb-6">How It Works</h2> */}
+
+          <div className="flex flex-col md:flex-row items-center justify-between space-y-6 md:space-y-0 md:space-x-4">
+
+            {/* <!-- Step 1 --> */}
+            <div className="flex flex-col items-center text-center max-w-xs">
+              <div className="w-12 h-12 border rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-lg mb-2">1</div>
+              <h3 className="font-semibold text-gray-800 dark:text-white mb-1">Design Your Form</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                Create a New Form - add question blocks manually or use AI to generate them in seconds.
+              </p>
+            </div>
+
+            {/* <!-- Arrow --> */}
+            <div className="hidden md:block text-gray-400 text-3xl">➜</div>
+
+            {/* <!-- Step 2 --> */}
+            <div className="flex flex-col items-center text-center max-w-xs">
+              <div className="w-12 h-12 border rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center font-bold text-lg mb-2">2</div>
+              <h3 className="font-semibold text-gray-800 dark:text-white mb-1">Save Your Draft</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                Don’t forget to save — unsaved questions may be lost.
+              </p>
+            </div>
+
+            {/* <!-- Arrow --> */}
+            <div className="hidden md:block text-gray-400 text-3xl">➜</div>
+
+            {/* <!-- Step 3 --> */}
+            <div className="flex flex-col items-center text-center max-w-xs">
+              <div className="w-12 h-12 border rounded-full bg-green-100 text-green-600 flex items-center justify-center font-bold text-lg mb-2">3</div>
+              <h3 className="font-semibold text-gray-800 dark:text-white mb-1">Publish the Form</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                Once published, your form becomes read-only. It won’t receive responses until then.
+              </p>
+            </div>
+
+          </div>
+        </div>
+
 
         {/* Forms grid */}
         {forms.length === 0 ? (
