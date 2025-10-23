@@ -1,146 +1,106 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { FaBolt, FaMagic, FaEdit, FaChartLine, FaFileExcel, FaRocket } from 'react-icons/fa';
-import toast, { Toaster } from 'react-hot-toast';
+import React from "react";
 
-const LandingPage = () => {
-  const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState(0);
-  const steps = [
-    { text: "Enter Prompt", icon: FaMagic, color: "from-purple-500 to-pink-500" },
-    { text: "Make Adjustments", icon: FaEdit, color: "from-blue-500 to-cyan-500" },
-    { text: "Publish & Collect Responses", icon: FaRocket, color: "from-orange-500 to-yellow-500" },
-    { text: "Save to Excel in seconds", icon: FaFileExcel, color: "from-emerald-500 to-lime-500" }
-  ];
+const StyleProvider = () => (
+  <style>
+    {`
+      body {
+        font-family: 'Inter', sans-serif;
+      }
 
-  useEffect(() => {
-    // Redirect to login after 8 seconds
-    const redirectTimer = setTimeout(() => {
-      navigate('/login');
-    }, 8000);
+      /* Diagonal strike-through effect */
+      .diagonal-strike {
+        position: relative;
+        display: inline-block;
+      }
 
-    // Cycle through steps every 1.5 seconds
-    const stepInterval = setInterval(() => {
-      setCurrentStep((prev) => (prev + 1) % steps.length);
-    }, 1500);
+      .diagonal-strike::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: -5%;
+        /* Adjusted width for a better look */
+        width: 110%; 
+        height: 2px;
+        background-color: #FFC058;
+         /* Adjusted rotation */
+        transform: rotate(-10deg);
+        transform-origin: center;
+      }
 
-    return () => {
-      clearTimeout(redirectTimer);
-      clearInterval(stepInterval);
-    };
-  }, [navigate]);
+      @keyframes fade-in {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
 
+      /* NEW: Faded Grid Background */
+      .grid-background {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        
+        /* Create a grid with very faint, dark lines */
+        background-image: 
+          linear-gradient(to right, rgba(255, 255, 255, 0.07) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+        
+        /* Set the size of the grid squares */
+        background-size: 50px 50px; 
+        
+        /* Add a mask to fade it out towards the edges */
+        mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
+        
+        z-index: 0; /* Place it in the background */
+      }
+    `}
+  </style>
+);
+
+function LandingPage() {
   return (
-    <div className="relative min-h-screen flex items-center justify-center p-6 overflow-hidden bg-gradient-to-br from-gray-950 to-blue-950">
-      <Toaster position="top-center" />
-      
-      {/* Floating Icons */}
-      {[...Array(20)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute text-blue-900 opacity-[0.03]"
-          style={{
-            top: `${Math.random() * 100}%`,
-            left: `${Math.random() * 100}%`,
-            fontSize: `${Math.random() * 40 + 20}px`
-          }}
-          animate={{
-            y: [0, Math.random() * 40 - 20],
-            x: [0, Math.random() * 40 - 20],
-            rotate: [0, Math.random() * 360 - 180],
-            opacity: [0.03, 0.08, 0.03]
-          }}
-          transition={{
-            duration: Math.random() * 10 + 5,
-            repeat: Infinity,
-            repeatType: "reverse"
-          }}
-        >
-          <FaBolt />
-        </motion.div>
-      ))}
+    <>
+      <StyleProvider />
 
-      <div className="relative z-10 text-center max-w-4xl">
-        {/* Logo/Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mb-8"
-        >
-          <div className="inline-flex items-center justify-center mb-6">
-            <motion.div
-              className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 flex items-center justify-center shadow-xl"
-              animate={{
-                rotate: 360,
-                transition: {
-                  duration: 15,
-                  repeat: Infinity,
-                  ease: "linear"
-                }
-              }}
-            >
-              <FaBolt className="w-8 h-8 text-white" />
-            </motion.div>
+      {/* Main container: Now relative for z-index layering */}
+      <div className="min-h-screen bg-[#010101] text-white relative overflow-hidden">
+
+        {/* NEW: Grid Background Element */}
+        <div className="grid-background"></div>
+
+        {/* Your content, wrapped in a div to center it and place it on top (z-10) */}
+        <div className="min-h-screen flex flex-col items-center justify-center text-center p-6 relative z-10">
+
+          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-full px-5 py-2 mb-16 text-gray-300 text-sm animate-[fade-in_0.8s_ease-out]">
+            ✨ AI Form Builder
           </div>
-          <h1 className="text-5xl md:text-6xl font-bold text-white mb-4">
-            Formify AI
+
+          <h1 className="text-5xl homemade-apple-regular md:text-6xl text-white mb-4 animate-[fade-in_1s_ease-out] leading-snug md:leading-tight">
+            Build forms with ease, in{" "}
+            <span className="diagonal-strike text-gray-400">minutes</span>{" "}
+            <span className="text-white">seconds</span>
           </h1>
-          <h2 className="text-2xl md:text-3xl font-medium text-blue-200">
-            Google Forms, but <span className="text-yellow-300">better</span> - saves you 90% of your time
-          </h2>
-        </motion.div>
 
-        {/* Animated Steps */}
-        <div className="relative h-32 md:h-40 mb-12">
-          {steps.map((step, index) => (
-            <motion.div
-              key={index}
-              className={`absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-r ${step.color} bg-clip-text text-transparent`}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{
-                opacity: currentStep === index ? 1 : 0,
-                y: currentStep === index ? 0 : 20
-              }}
-              transition={{ duration: 0.8 }}
+          <p className="text-gray-400 max-w-lg mt-4 mx-auto leading-relaxed animate-[fade-in_1.2s_ease-out]">
+            Just tell our AI what kind of form you want — and it’ll create it for
+            you!{" "}
+          </p>
+          <span className="homemade-apple-regular mt-2 text-lg text-pink-200">No coding, no drag-and-drop!</span>
+
+          <p className="text-sm mt-10 text-gray-500 animate-[fade-in_1.4s_ease-out]">
+            by{" "}
+            <a
+              href="https://bhavishyakhunger.vercel.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white hover:underline"
             >
-              {/* <step.icon color='white' className="w-12 h-12 mb-4" /> */}
-              <div className="text-3xl md:text-4xl font-bold">{step.text}</div>
-            </motion.div>
-          ))}
+              @BhavishyaKhunger
+            </a>
+          </p>
         </div>
-
-        {/* Description */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="text-lg md:text-xl text-blue-200 mb-12 max-w-2xl mx-auto"
-        >
-          AI-powered forms that write themselves. Just describe what you need and let our AI handle the rest.
-        </motion.p>
-
-        {/* Redirect Indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-          className="flex flex-col items-center"
-        >
-          <div className="text-blue-300 mb-2">Redirecting to login...</div>
-          <div className="w-48 h-1.5 bg-gray-800 rounded-full overflow-hidden">
-            <motion.div
-              className="h-full bg-gradient-to-r from-blue-500 to-cyan-500"
-              initial={{ width: 0 }}
-              animate={{ width: "100%" }}
-              transition={{ duration: 7, ease: "linear" }}
-            />
-          </div>
-        </motion.div>
       </div>
-    </div>
+    </>
   );
-};
+}
 
 export default LandingPage;

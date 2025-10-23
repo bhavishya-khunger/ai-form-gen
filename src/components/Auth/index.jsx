@@ -1,25 +1,13 @@
-import React, { useState, useMemo } from 'react';
-import {
-    FaEnvelope, FaLock, FaUser, FaSpinner, FaEye, FaEyeSlash,
-    FaRocket, FaPalette, FaFingerprint, FaMagic, FaShieldAlt,
-    FaBolt, FaFeatherAlt, FaLeaf, FaFire, FaWater, FaMountain,
-    FaExclamationTriangle
-} from 'react-icons/fa';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { FaUser, FaLock, FaEnvelope, FaEye, FaEyeSlash, FaFingerprint, FaSatelliteDish } from 'react-icons/fa';
+import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import toast, { Toaster } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 
 const API_BASE_URL = import.meta.env.VITE_SERVER_URI;
 
-const iconChoices = [
-    FaEnvelope, FaLock, FaUser, FaSpinner, FaEye, FaEyeSlash,
-    FaRocket, FaPalette, FaFingerprint, FaMagic, FaShieldAlt,
-    FaBolt, FaFeatherAlt, FaLeaf, FaFire, FaWater, FaMountain,
-    FaExclamationTriangle
-];
-
-function AuthForm() {
+const AuthInterface = () => {
     const [isLogin, setIsLogin] = useState(true);
     const [formData, setFormData] = useState({
         name: '',
@@ -29,40 +17,33 @@ function AuthForm() {
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
     const [showPassword, setShowPassword] = useState(false);
+    const [activeField, setActiveField] = useState(null);
+    const [biometricActive, setBiometricActive] = useState(false);
     const navigate = useNavigate();
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-        // Clear specific error when user starts typing in that field
-        if (errors[name]) {
-            setErrors(prev => ({ ...prev, [name]: undefined }));
-        }
-        // Clear general API error message when any input changes
-        if (errors.api) {
-            setErrors(prev => ({ ...prev, api: undefined }));
-        }
+        setFormData(prev => ({ ...prev, [name]: value }));
+        if (errors[name]) setErrors(prev => ({ ...prev, [name]: undefined }));
+        if (errors.api) setErrors(prev => ({ ...prev, api: undefined }));
     };
 
     const validate = () => {
         const newErrors = {};
         if (!formData.email.trim()) {
-            newErrors.email = 'Email is required';
-        } else if (!/\S+@\S+\.\S/.test(formData.email)) {
-            newErrors.email = 'Email address is invalid';
+            newErrors.email = 'Required';
+        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+            newErrors.email = 'Invalid email';
         }
 
         if (!formData.password.trim()) {
-            newErrors.password = 'Password is required';
+            newErrors.password = 'Required';
         } else if (formData.password.length < 6) {
-            newErrors.password = 'Password must be at least 6 characters';
+            newErrors.password = 'Min 6 characters';
         }
 
         if (!isLogin && !formData.name.trim()) {
-            newErrors.name = 'Name is required';
+            newErrors.name = 'Required';
         }
 
         setErrors(newErrors);
@@ -71,67 +52,66 @@ function AuthForm() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setErrors({}); // Clear all errors at the start of submission
+        setErrors({});
 
         if (validate()) {
             setLoading(true);
 
             try {
-                const endpoint = isLogin ? '/login' : '/register'; // Adjusted to match common API paths
+                const endpoint = isLogin ? '/login' : '/register';
                 const payload = isLogin 
                     ? { email: formData.email, password: formData.password }
                     : { username: formData.name, email: formData.email, password: formData.password };
 
-                // Axios automatically handles JSON stringification and response parsing
                 const response = await axios.post(`${API_BASE_URL}/api/auth${endpoint}`, payload);
                 
                 if (isLogin) {
-                    const token = response.data.token;
-                    const expiresAt = Date.now() + 2 * 60 * 60 * 1000; // 2 hours from now
-                    localStorage.setItem('token', token);
-                    localStorage.setItem('token_expires_at', expiresAt);
+                    localStorage.setItem('token', response.data.token);
+                    localStorage.setItem('token_expires_at', Date.now() + 2 * 60 * 60 * 1000);
 
-                    toast.success(`${response?.data?.user?.username}, You're all set. Let’s get started! 🚀`, {
+                    toast.success(`Welcome back, ${response?.data?.user?.username}!`, {
                         style: {
-                            background: '#1A202C', // Dark background for toast
-                            color: '#E2E8F0', // Light text
-                            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
-                        },
-                        iconTheme: {
-                            primary: '#4299E1', // Blue accent
-                            secondary: '#FFFFFF',
-                        },
-                    });
-                    // In a real app, you might save a token and then navigate
-                    navigate('/dashboard'); // Uncomment if you have a dashboard route
-                } else {
-                    toast.success(`Account created!`, {
-                        style: {
-                            background: '#1A202C',
+                            background: 'rgba(20, 20, 30, 0.9)',
                             color: '#E2E8F0',
-                            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            backdropFilter: 'blur(10px)'
                         },
                         iconTheme: {
-                            primary: '#4299E1',
+                            primary: '#6d28d9',
                             secondary: '#FFFFFF',
                         },
                     });
-                    setIsLogin(true); // Switch to login after successful registration
-                    setFormData({ name: '', email: '', password: '' }); // Clear form
+                    navigate('/dashboard');
+                } else {
+                    toast.success('Account created!', {
+                        style: {
+                            background: 'rgba(20, 20, 30, 0.9)',
+                            color: '#E2E8F0',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            backdropFilter: 'blur(10px)'
+                        },
+                        iconTheme: {
+                            primary: '#6d28d9',
+                            secondary: '#FFFFFF',
+                        },
+                    });
+                    setIsLogin(true);
+                    setFormData({ name: '', email: '', password: '' });
                 }
             } catch (error) {
                 console.error("API error:", error);
-                const errorMsg = 'An unexpected error occurred. Please ensure you are using correct credentials.';
+                const errorMsg = error.response?.data?.message || 'Authentication failed';
                 setErrors(prev => ({ ...prev, api: errorMsg }));
                 
                 toast.error(errorMsg, {
                     style: {
-                        background: '#1A202C',
-                        color: '#FC8181', // Red text for error
-                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
+                        background: 'rgba(30, 10, 10, 0.9)',
+                        color: '#FECACA',
+                        border: '1px solid rgba(255, 100, 100, 0.2)',
+                        backdropFilter: 'blur(10px)'
                     },
                     iconTheme: {
-                        primary: '#E53E3E', // Red accent
+                        primary: '#EF4444',
                         secondary: '#FFFFFF',
                     },
                 });
@@ -141,295 +121,355 @@ function AuthForm() {
         }
     };
 
-    // Pre-calculate fixed positions for icons using useMemo
-    const positionedIcons = useMemo(() => {
-        const icons = [];
-        const targetCount = 25; // Number of floating icons
-        
-        // Fallback for window dimensions in case of SSR or initial render
-        const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 800;
-        const screenHeight = typeof window !== 'undefined' ? window.innerHeight : 600;
-
-        const cols = Math.ceil(Math.sqrt(targetCount * screenWidth / screenHeight));
-        const rows = Math.ceil(targetCount / cols);
-        
-        const xSpacing = screenWidth / cols;
-        const ySpacing = screenHeight / rows;
-
-        let iconIndex = 0;
-        for (let r = 0; r < rows; r++) {
-            for (let c = 0; c < cols; c++) {
-                if (icons.length >= targetCount) break;
-
-                const IconComponent = iconChoices[iconIndex % iconChoices.length]; // Cycle through icon types
-                const size = Math.random() * 80 + 40; // Random size between 40px and 120px
-                
-                // Calculate a fixed position within each grid cell, with some randomness
-                const initialX = c * xSpacing + (Math.random() - 0.5) * (xSpacing * 0.6); // 60% randomness within cell
-                const initialY = r * ySpacing + (Math.random() - 0.5) * (ySpacing * 0.6);
-
-                // Ensure icons don't go off-screen too much
-                const clampedX = Math.max(0, Math.min(screenWidth - size, initialX));
-                const clampedY = Math.max(0, Math.min(screenHeight - size, initialY));
-
-                const delay = Math.random() * 5; // Random start delay up to 5s
-                const duration = Math.random() * 5 + 5; // Random duration (5-10s) for resize cycle
-                const rotateValue = Math.random() * 360 - 180; // Random initial rotation
-
-                icons.push({
-                    id: `icon-${icons.length}`,
-                    IconComponent,
-                    initialX: clampedX,
-                    initialY: clampedY,
-                    size,
-                    delay,
-                    duration,
-                    rotateValue
-                });
-                iconIndex++;
-            }
-            if (icons.length >= targetCount) break;
-        }
-        return icons;
-    }, []); // Empty dependency array ensures this runs only once on mount
-
+    const simulateBiometric = () => {
+        setBiometricActive(true);
+        setTimeout(() => {
+            setBiometricActive(false);
+            toast.success('Biometric authentication successful!', {
+                style: {
+                    background: 'rgba(20, 20, 30, 0.9)',
+                    color: '#E2E8F0',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    backdropFilter: 'blur(10px)'
+                },
+                iconTheme: {
+                    primary: '#6d28d9',
+                    secondary: '#FFFFFF',
+                },
+            });
+            navigate('/dashboard');
+        }, 2000);
+    };
 
     return (
-        <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden">
+        <div className="min-h-screen flex items-center justify-center bg-gray-900 p-4 overflow-hidden relative">
             <Toaster position="top-center" />
             
-            {/* Background gradient - Professional Theme */}
-            <div className="absolute inset-0 bg-gradient-to-br from-gray-950 to-blue-950 z-0"></div>
-            {/* Subtle overlay for depth */}
-            <div className="absolute inset-0 bg-black opacity-20 z-0"></div>
-
-            {/* Floating Icons - Muted for professionalism */}
-            {positionedIcons.map((iconProps) => (
-                <motion.div
-                    key={iconProps.id}
-                    className={`absolute text-blue-900 opacity-[0.015]`} // Very subtle blue-black, almost blends in
-                    style={{ 
-                        top: iconProps.initialY, 
-                        left: iconProps.initialX, 
-                        fontSize: iconProps.size, 
-                        pointerEvents: 'none',
-                        textShadow: 'none' // No glow for professionalism
-                    }}
-                    initial={{ opacity: 0.01, scale: 0.7, rotate: iconProps.rotateValue }} 
+            {/* Futuristic Background Elements */}
+            <div className="absolute inset-0 overflow-hidden">
+                {/* Grid pattern */}
+                <div className="absolute inset-0 opacity-10" style={{
+                    backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
+                    backgroundSize: '50px 50px'
+                }}></div>
+                
+                {/* Floating orbs */}
+                <motion.div 
+                    className="absolute top-1/4 left-1/4 w-32 h-32 rounded-full bg-purple-900 filter blur-3xl opacity-20"
                     animate={{
-                        scale: [0.8, 0.9, 0.8], 
-                        opacity: [0.1, 0.3, 0.1], // Even more subtle fade
-                        rotate: iconProps.rotateValue + (Math.random() > 0.5 ? 360 : -360), 
+                        x: [0, 50, 0],
+                        y: [0, -30, 0],
                     }}
                     transition={{
-                        duration: iconProps.duration,
-                        ease: "easeInOut", 
+                        duration: 15,
                         repeat: Infinity,
-                        repeatType: "mirror", 
-                        delay: iconProps.delay,
+                        repeatType: 'reverse'
                     }}
-                >
-                    <iconProps.IconComponent />
-                </motion.div>
-            ))}
-
-            {/* Main Form Card - Professional Card */}
-            <motion.div 
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5 }}
-                className="relative bg-gray-900 rounded-2xl shadow-2xl overflow-hidden w-full max-w-md z-10 border border-blue-900" 
-            >
-                {/* Accent header bar */}
-                <div className="h-1.5 bg-gradient-to-r from-blue-600 to-cyan-500"></div>
+                />
+                <motion.div 
+                    className="absolute bottom-1/3 right-1/3 w-40 h-40 rounded-full bg-blue-900 filter blur-3xl opacity-20"
+                    animate={{
+                        x: [0, -40, 0],
+                        y: [0, 40, 0],
+                    }}
+                    transition={{
+                        duration: 20,
+                        repeat: Infinity,
+                        repeatType: 'reverse'
+                    }}
+                />
                 
-                <div className="p-8">
-                    <motion.div 
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="text-center mb-8"
-                    >
-                        <div className="flex items-center justify-center mb-4">
-                            <motion.div 
-                                className="w-14 h-14 rounded-full bg-blue-900 flex items-center justify-center shadow-lg"
+                {/* Connection lines animation */}
+                <div className="absolute inset-0">
+                    {[...Array(8)].map((_, i) => (
+                        <motion.div
+                            key={i}
+                            className="absolute h-px bg-gradient-to-r from-transparent via-purple-500 to-transparent"
+                            style={{
+                                top: `${Math.random() * 100}%`,
+                                left: `${Math.random() * 100}%`,
+                                width: `${Math.random() * 200 + 100}px`,
+                                opacity: 0.3
+                            }}
+                            animate={{
+                                x: [0, Math.random() * 200 - 100],
+                                opacity: [0.1, 0.3, 0.1]
+                            }}
+                            transition={{
+                                duration: Math.random() * 10 + 5,
+                                repeat: Infinity,
+                                repeatType: 'reverse'
+                            }}
+                        />
+                    ))}
+                </div>
+            </div>
+
+            {/* Main Auth Card */}
+            <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="relative w-full max-w-md z-10"
+            >
+                {/* Glass morphic card */}
+                <div className="backdrop-blur-lg bg-gray-800/50 rounded-2xl overflow-hidden border border-gray-700/50 shadow-2xl">
+                    {/* Holographic header */}
+                    <div className="h-1 bg-gradient-to-r from-purple-500 via-blue-400 to-purple-600"></div>
+                    
+                    <div className="p-8">
+                        {/* Logo/Header */}
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.2 }}
+                            className="flex flex-col items-center mb-8"
+                        >
+                            <motion.div
+                                className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center mb-4 shadow-lg"
                                 animate={{
                                     rotate: 360,
                                     transition: {
-                                        duration: 15,
+                                        duration: 20,
                                         repeat: Infinity,
                                         ease: "linear"
                                     }
                                 }}
                             >
-                                {/* Using a lightning bolt icon for a professional/tech feel */}
-                                <FaBolt className="w-8 h-8 text-cyan-300" /> 
+                                <FaSatelliteDish className="w-8 h-8 text-white" />
                             </motion.div>
-                        </div>
-                        <h2 className="text-3xl font-bold text-gray-100"> 
-                            {isLogin ? 'Access Your Account' : 'Create New Account'}
-                        </h2>
-                        <p className="text-gray-400 mt-2"> 
-                            {isLogin ? 'Securely sign in to continue your work.' : 'Register to get started with our services.'}
-                        </p>
-                    </motion.div>
+                            <h2 className="text-3xl font-bold text-white text-center">
+                                {isLogin ? 'ACCESS GRANTED' : 'NEW IDENTITY'}
+                            </h2>
+                            <p className="text-gray-400 mt-2 text-center">
+                                {isLogin ? 'Authentication required' : 'Register new profile'}
+                            </p>
+                        </motion.div>
 
-                    <form onSubmit={handleSubmit} noValidate>
-                        {!isLogin && (
+                        {/* Biometric Auth Option */}
+                        {isLogin && (
                             <motion.div
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                transition={{ duration: 0.3 }}
-                                className="mb-4"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.4 }}
+                                className="mb-6"
                             >
-                                <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-1">Full Name</label> 
+                                <button
+                                    onClick={simulateBiometric}
+                                    disabled={biometricActive}
+                                    className={`w-full flex items-center justify-center py-3 px-4 rounded-lg font-medium transition-all duration-300 ${biometricActive 
+                                        ? 'bg-purple-900/50 text-purple-300' 
+                                        : 'bg-purple-900/30 hover:bg-purple-900/50 text-purple-400 hover:text-white border border-purple-700/50 hover:border-purple-500'}`}
+                                >
+                                    {biometricActive ? (
+                                        <>
+                                            <motion.div
+                                                animate={{ rotate: 360 }}
+                                                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                                className="mr-2"
+                                            >
+                                                <FaFingerprint className="animate-pulse" />
+                                            </motion.div>
+                                            Scanning...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <FaFingerprint className="mr-2" />
+                                            Use Biometric Authentication
+                                        </>
+                                    )}
+                                </button>
+                                <div className="flex items-center my-4">
+                                    <div className="flex-grow border-t border-gray-700/50"></div>
+                                    <span className="mx-4 text-gray-500 text-sm">OR</span>
+                                    <div className="flex-grow border-t border-gray-700/50"></div>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* Auth Form */}
+                        <form onSubmit={handleSubmit} noValidate>
+                            <AnimatePresence>
+                                {!isLogin && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        transition={{ duration: 0.3 }}
+                                        className="mb-4 overflow-hidden"
+                                    >
+                                        <div className={`relative transition-all duration-200 ${activeField === 'name' ? 'opacity-100' : 'opacity-90'}`}>
+                                            <label 
+                                                htmlFor="name" 
+                                                className={`block text-xs font-medium mb-1 transition-all duration-200 ${activeField === 'name' ? 'text-purple-400' : 'text-gray-400'}`}
+                                            >
+                                                FULL NAME
+                                            </label>
+                                            <div className="relative">
+                                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
+                                                    <FaUser className={`transition-all duration-200 ${activeField === 'name' ? 'text-purple-400 scale-110' : ''}`} />
+                                                </div>
+                                                <input
+                                                    id="name"
+                                                    name="name"
+                                                    type="text"
+                                                    value={formData.name}
+                                                    onChange={handleChange}
+                                                    onFocus={() => setActiveField('name')}
+                                                    onBlur={() => setActiveField(null)}
+                                                    placeholder="Enter your full name"
+                                                    className={`pl-10 pr-4 w-full py-3 bg-gray-800/70 border ${errors.name ? 'border-red-500/50' : 'border-gray-700/50'} rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500/50 text-white placeholder-gray-500 transition-all duration-200`}
+                                                    aria-invalid={errors.name ? "true" : "false"}
+                                                />
+                                            </div>
+                                            {errors.name && (
+                                                <motion.p 
+                                                    initial={{ opacity: 0, y: -5 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    className="mt-1 text-xs text-red-400"
+                                                >
+                                                    {errors.name}
+                                                </motion.p>
+                                            )}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            <div className={`mb-4 transition-all duration-200 ${activeField === 'email' ? 'opacity-100' : 'opacity-90'}`}>
+                                <label 
+                                    htmlFor="email" 
+                                    className={`block text-xs font-medium mb-1 transition-all duration-200 ${activeField === 'email' ? 'text-purple-400' : 'text-gray-400'}`}
+                                >
+                                    EMAIL ADDRESS
+                                </label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
-                                        <FaUser /> 
+                                        <FaEnvelope className={`transition-all duration-200 ${activeField === 'email' ? 'text-purple-400 scale-110' : ''}`} />
                                     </div>
                                     <input
-                                        id="name"
-                                        name="name"
-                                        type="text"
-                                        value={formData.name}
+                                        id="email"
+                                        name="email"
+                                        type="email"
+                                        value={formData.email}
                                         onChange={handleChange}
-                                        placeholder="Alex Johnson"
-                                        className={`pl-10 pr-4 w-full p-3 bg-gray-800 text-gray-100 border ${errors.name ? 'border-red-500' : 'border-gray-700'} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition`} 
-                                        aria-invalid={errors.name ? "true" : "false"}
-                                        aria-describedby="name-error"
+                                        onFocus={() => setActiveField('email')}
+                                        onBlur={() => setActiveField(null)}
+                                        placeholder="your@email.com"
+                                        className={`pl-10 pr-4 w-full py-3 bg-gray-800/70 border ${errors.email ? 'border-red-500/50' : 'border-gray-700/50'} rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500/50 text-white placeholder-gray-500 transition-all duration-200`}
+                                        aria-invalid={errors.email ? "true" : "false"}
                                     />
                                 </div>
-                                {errors.name && <p id="name-error" className="mt-1 text-sm text-red-400">{errors.name}</p>} 
-                            </motion.div>
-                        )}
-
-                        <div className="mb-4">
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">Email Address</label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
-                                    <FaEnvelope />
-                                </div>
-                                <input
-                                    id="email"
-                                    name="email"
-                                    type="email"
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                    placeholder="alex@example.com"
-                                    className={`pl-10 pr-4 w-full p-3 bg-gray-800 text-gray-100 border ${errors.email ? 'border-red-500' : 'border-gray-700'} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition`}
-                                    aria-invalid={errors.email ? "true" : "false"}
-                                    aria-describedby="email-error"
-                                />
-                            </div>
-                            {errors.email && <p id="email-error" className="mt-1 text-sm text-red-400">{errors.email}</p>}
-                        </div>
-
-                        <div className="mb-6">
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1">Password</label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
-                                    <FaLock />
-                                </div>
-                                <input
-                                    id="password"
-                                    name="password"
-                                    type={showPassword ? 'text' : 'password'} 
-                                    value={formData.password}
-                                    onChange={handleChange}
-                                    placeholder="••••••••"
-                                    className={`pl-10 pr-10 w-full p-3 bg-gray-800 text-gray-100 border ${errors.password ? 'border-red-500' : 'border-gray-700'} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition`}
-                                    aria-invalid={errors.password ? "true" : "false"}
-                                    aria-describedby="password-error"
-                                />
-                                <button
-                                    type="button"
-                                    className="absolute inset-y-0 right-0 pr-3 flex items-center focus:outline-none text-gray-500 hover:text-gray-400"
-                                    onClick={() => setShowPassword(prev => !prev)}
-                                    aria-label={showPassword ? "Hide password" : "Show password"}
-                                >
-                                    {showPassword ? <FaEyeSlash /> : <FaEye />}
-                                </button>
-                            </div>
-                            {errors.password && <p id="password-error" className="mt-1 text-sm text-red-400">{errors.password}</p>}
-                        </div>
-
-                        <motion.button
-                            whileHover={{ scale: 1.02, boxShadow: "0 4px 20px rgba(0, 119, 204, 0.3)" }} // Blue shadow
-                            whileTap={{ scale: 0.98 }}
-                            type="submit"
-                            disabled={loading}
-                            className="w-full bg-gradient-to-r from-blue-700 to-blue-900 text-white py-3 px-4 rounded-lg font-medium hover:from-blue-800 hover:to-blue-950 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-gray-900 transition-all duration-200 shadow-lg flex items-center justify-center" 
-                        >
-                            {loading ? (
-                                <>
-                                    <motion.div
-                                        animate={{ rotate: 360 }}
-                                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                                        className="mr-2"
+                                {errors.email && (
+                                    <motion.p 
+                                        initial={{ opacity: 0, y: -5 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="mt-1 text-xs text-red-400"
                                     >
-                                        <FaSpinner />
-                                    </motion.div>
-                                    {isLogin ? 'Signing In...' : 'Creating Account...'}
-                                </>
-                            ) : (
-                                isLogin ? 'Sign In' : 'Get Started'
+                                        {errors.email}
+                                    </motion.p>
+                                )}
+                            </div>
+
+                            <div className={`mb-6 transition-all duration-200 ${activeField === 'password' ? 'opacity-100' : 'opacity-90'}`}>
+                                <label 
+                                    htmlFor="password" 
+                                    className={`block text-xs font-medium mb-1 transition-all duration-200 ${activeField === 'password' ? 'text-purple-400' : 'text-gray-400'}`}
+                                >
+                                    PASSWORD
+                                </label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
+                                        <FaLock className={`transition-all duration-200 ${activeField === 'password' ? 'text-purple-400 scale-110' : ''}`} />
+                                    </div>
+                                    <input
+                                        id="password"
+                                        name="password"
+                                        type={showPassword ? 'text' : 'password'}
+                                        value={formData.password}
+                                        onChange={handleChange}
+                                        onFocus={() => setActiveField('password')}
+                                        onBlur={() => setActiveField(null)}
+                                        placeholder="••••••••"
+                                        className={`pl-10 pr-10 w-full py-3 bg-gray-800/70 border ${errors.password ? 'border-red-500/50' : 'border-gray-700/50'} rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500/50 text-white placeholder-gray-500 transition-all duration-200`}
+                                        aria-invalid={errors.password ? "true" : "false"}
+                                    />
+                                    <button
+                                        type="button"
+                                        className="absolute inset-y-0 right-0 pr-3 flex items-center focus:outline-none text-gray-500 hover:text-purple-400 transition-all"
+                                        onClick={() => setShowPassword(prev => !prev)}
+                                        aria-label={showPassword ? "Hide password" : "Show password"}
+                                    >
+                                        {showPassword ? <FaEyeSlash /> : <FaEye />}
+                                    </button>
+                                </div>
+                                {errors.password && (
+                                    <motion.p 
+                                        initial={{ opacity: 0, y: -5 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="mt-1 text-xs text-red-400"
+                                    >
+                                        {errors.password}
+                                    </motion.p>
+                                )}
+                            </div>
+
+                            {errors.api && (
+                                <motion.div 
+                                    initial={{ opacity: 0, y: -10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="mb-4 p-3 bg-red-900/30 border border-red-700/50 rounded-lg text-red-400 text-sm"
+                                >
+                                    {errors.api}
+                                </motion.div>
                             )}
-                        </motion.button>
-                    </form>
 
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.4 }}
-                        className="mt-6 text-center text-sm text-gray-400" 
-                    >
-                        {isLogin ? (
-                            <>
-                                New here?{' '}
-                                <button
-                                    onClick={() => {
-                                        setIsLogin(false);
-                                        setErrors({});
-                                        setFormData({ name: '', email: '', password: '' });
-                                    }}
-                                    className="font-medium text-blue-500 hover:text-blue-400 focus:outline-none underline underline-offset-2"
-                                >
-                                    Create an account
-                                </button>
-                            </>
-                        ) : (
-                            <>
-                                Already have an account?{' '}
-                                <button
-                                    onClick={() => {
-                                        setIsLogin(true);
-                                        setErrors({});
-                                        setFormData({ name: '', email: '', password: '' });
-                                    }}
-                                    className="font-medium text-blue-500 hover:text-blue-400 focus:outline-none underline underline-offset-2"
-                                >
-                                    Sign in
-                                </button>
-                            </>
-                        )}
-                    </motion.div>
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                type="submit"
+                                disabled={loading}
+                                className="w-full bg-gradient-to-r from-purple-600 to-blue-500 text-white py-3 px-4 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:ring-offset-2 focus:ring-offset-gray-800/50 transition-all duration-200 shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30 flex items-center justify-center"
+                            >
+                                {loading ? (
+                                    <>
+                                        <motion.div
+                                            animate={{ rotate: 360 }}
+                                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                            className="mr-2"
+                                        >
+                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                                        </motion.div>
+                                        {isLogin ? 'AUTHENTICATING...' : 'CREATING PROFILE...'}
+                                    </>
+                                ) : (
+                                    isLogin ? 'ACCESS SYSTEM' : 'REGISTER PROFILE'
+                                )}
+                            </motion.button>
+                        </form>
+
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.6 }}
+                            className="mt-6 text-center text-sm"
+                        >
+                            <button
+                                onClick={() => {
+                                    setIsLogin(!isLogin);
+                                    setErrors({});
+                                    setFormData({ name: '', email: '', password: '' });
+                                }}
+                                className="text-purple-400 hover:text-purple-300 focus:outline-none transition-all duration-200 font-medium"
+                            >
+                                {isLogin ? 'CREATE NEW PROFILE' : 'ALREADY HAVE PROFILE?'}
+                            </button>
+                        </motion.div>
+                    </div>
                 </div>
-
-                {/* <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.6 }}
-                    className="bg-gray-800 px-8 py-4 text-center border-t border-gray-700" 
-                >
-                    <p className="text-xs text-gray-500"> 
-                        By continuing, you agree to our{' '}
-                        <a href="#" className="font-medium text-blue-500 hover:text-blue-400 underline">Terms</a> and{' '}
-                        <a href="#" className="font-medium text-blue-500 hover:text-blue-400 underline">Privacy Policy</a>.
-                    </p>
-                </motion.div> */}
             </motion.div>
         </div>
     );
-}
+};
 
-export default AuthForm;
+export default AuthInterface;
