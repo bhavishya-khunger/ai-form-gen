@@ -4,7 +4,7 @@ import Dashboard from './components/Dashboard';
 import FormBuilder from './components/FormBuilder';
 import { ThemeProvider } from './components/context/ThemeContext';
 import Form from './components/FormBuilder/Form';
-import LandingPage from './components/LandingPage';
+import LandingPage from './pages/Landing/LandingPage.jsx';
 import AuthForm from './components/Auth';
 import { Toaster } from 'react-hot-toast'
 import { ProtectedRoute } from './utils/ProtectedRoute.jsx'

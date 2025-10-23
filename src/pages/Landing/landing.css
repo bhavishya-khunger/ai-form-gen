@@ -1,0 +1,153 @@
+body {
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    overflow-x: hidden;
+}
+
+/* Diagonal strike-through effect */
+.diagonal-strike {
+    position: relative;
+    display: inline-block;
+}
+
+.diagonal-strike::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: -5%;
+    width: 110%;
+    height: 2px;
+    background-color: #FFC058;
+    transform: rotate(-10deg);
+    transform-origin: center;
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* In your landing.css file */
+
+@keyframes twinkle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.95); /* A very subtle shrink for a 'pulse' effect */
+  }
+}
+
+/* NEW: Faded Grid Background */
+.grid-background {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+        linear-gradient(to right, rgba(255, 255, 255, 0.07) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+    background-size: 50px 50px;
+    mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
+    z-index: 0;
+}
+
+/* Blackboard text effect */
+.blackboard-text {
+    font-family: 'Fredericka the Great';
+}
+
+.chalk-underline {
+    position: relative;
+    display: inline-block;
+}
+
+.chalk-underline::after {
+    content: "";
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #cbd5e1, transparent);
+    border-radius: 2px;
+}
+
+/* Feature card styles */
+.feature-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Handwritten effect */
+.handwritten {
+    font-family: 'Comic Sans MS', cursive, sans-serif; /* Keep 'Homemade Apple' if imported */
+    font-style: italic;
+}
+
+/* Dotted line connector */
+.dotted-connector {
+    border-left: 2px dashed rgba(255, 255, 255, 0.3);
+    height: 40px;
+    margin: 0 auto;
+    width: 2px;
+}
+
+/* Floating Elements Styles and Animations */
+.floating-icon, .floating-emoji {
+    position: absolute;
+    pointer-events: none; /* Allows clicks to pass through to elements below */
+}
+
+@keyframes float {
+    0% {
+        transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-10px) rotate(2deg);
+    }
+    100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+}
+
+@keyframes float-reverse {
+    0% {
+        transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+        transform: translateY(10px) rotate(-2deg);
+    }
+    100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+}
+
+.icon-1 { animation: float 6s ease-in-out infinite; }
+.icon-2 { animation: float-reverse 7s ease-in-out infinite; }
+.icon-3 { animation: float 8s ease-in-out infinite; }
+.icon-4 { animation: float-reverse 6.5s ease-in-out infinite; }
+.icon-5 { animation: float 7.5s ease-in-out infinite; }
+.icon-6 { animation: float-reverse 5.8s ease-in-out infinite; }
+
+/* Emojis can have slightly different animations or delays */
+.emoji-1 { animation: float 5s ease-in-out infinite; }
+.emoji-2 { animation: float-reverse 6s ease-in-out infinite; }
+.emoji-3 { animation: float 4.5s ease-in-out infinite; }

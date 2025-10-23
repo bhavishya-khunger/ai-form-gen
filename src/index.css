@@ -2,7 +2,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Poppins', sans-serif;
 }
 
 .homemade-apple-regular {
@@ -11,33 +11,22 @@ body {
   font-style: normal;
 }
 
-
-@keyframes blob {
-  0% {
-    transform: translate(0px, 0px) scale(1);
-  }
-
-  33% {
-    transform: translate(30vw, -25vh) scale(1.1);
-  }
-
-  66% {
-    transform: translate(-20vw, 20vh) scale(0.9);
-  }
-
-  100% {
-    transform: translate(0px, 0px) scale(1);
-  }
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
 }
 
-@keyframes fade-in-up {
-  0% {
-    opacity: 0;
-    transform: translateY(20px);
-  }
+/* Track */
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
 
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: white;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #A3B4FF;
 }
